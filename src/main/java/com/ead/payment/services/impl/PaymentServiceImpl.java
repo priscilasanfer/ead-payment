@@ -1,13 +1,17 @@
 package com.ead.payment.services.impl;
 
+import com.ead.payment.dtos.PaymentCommandDto;
 import com.ead.payment.dtos.PaymentRequestDto;
 import com.ead.payment.enums.PaymentControl;
 import com.ead.payment.models.CreditCardModel;
 import com.ead.payment.models.PaymentModel;
 import com.ead.payment.models.UserModel;
+import com.ead.payment.publishers.PaymentCommandPublisher;
 import com.ead.payment.repositories.CreditCardRepository;
 import com.ead.payment.repositories.PaymentRepository;
 import com.ead.payment.services.PaymentService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,11 +28,16 @@ import java.util.UUID;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
+    private static final Logger logger = LogManager.getLogger(PaymentServiceImpl.class);
+
     @Autowired
     CreditCardRepository creditCardRepository;
 
     @Autowired
     PaymentRepository paymentRepository;
+
+    @Autowired
+    PaymentCommandPublisher paymentCommandPublisher;
 
     @Override
     @Transactional
@@ -53,7 +62,15 @@ public class PaymentServiceImpl implements PaymentService {
         paymentModel.setUser(userModel);
         paymentRepository.save(paymentModel);
 
-        // send message to queue
+        try {
+            var paymentCommandDto = new PaymentCommandDto();
+            paymentCommandDto.setUserId(userModel.getUserId());
+            paymentCommandDto.setPaymentId(paymentModel.getPaymentId());
+            paymentCommandDto.setCardId(creditCardModel.getCardId());
+            paymentCommandPublisher.publishPaymentCommand(paymentCommandDto);
+        } catch (Exception e) {
+            logger.warn("Error sending payment command!");
+        }
 
         return paymentModel;
     }
