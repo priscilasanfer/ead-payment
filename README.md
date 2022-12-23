@@ -9,6 +9,7 @@
 - [Create PaymentIntent](https://stripe.com/docs/api/payment_intents/create?lang=java)
 - [Create PaymentMethod](https://stripe.com/docs/api/payment_methods/create)
 - [Confirm PaymentIntent](https://stripe.com/docs/api/payment_intents/confirm)
+- [Stripe Exceptions](https://stripe.com/docs/error-handling)
 
 ### Encrypt
 - [Key Generator](https://www.allkeysgenerator.com/Random/Security-Encryption-Key-Generator.aspx)
