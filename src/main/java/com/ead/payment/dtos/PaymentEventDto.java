@@ -1,65 +1,21 @@
-package com.ead.payment.models;
+package com.ead.payment.dtos;
 
-import com.ead.payment.dtos.PaymentEventDto;
-import com.ead.payment.enums.PaymentControl;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.beans.BeanUtils;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "TB_PAYMENTS")
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class PaymentModel implements Serializable {
+public class PaymentEventDto {
 
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID paymentId;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private PaymentControl paymentControl;
-
-    @Column(nullable = false)
+    private String paymentControl;
     private LocalDateTime paymentRequestDate;
-
-    @Column
     private LocalDateTime paymentCompletionDate;
-
-    @Column(nullable = false)
     private LocalDateTime paymentExpirationDate;
-
-    @Column(nullable = false, length = 4)
     private String lastDigitsCreditCard;
-
-    @Column(nullable = false)
     private BigDecimal valuePaid;
-
-    @Column(length = 150)
     private String paymentMessage;
-
-    @Column
     private boolean recurrence;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private UserModel user;
+    private UUID userId;
 
     public UUID getPaymentId() {
         return paymentId;
@@ -69,11 +25,11 @@ public class PaymentModel implements Serializable {
         this.paymentId = paymentId;
     }
 
-    public PaymentControl getPaymentControl() {
+    public String getPaymentControl() {
         return paymentControl;
     }
 
-    public void setPaymentControl(PaymentControl paymentControl) {
+    public void setPaymentControl(String paymentControl) {
         this.paymentControl = paymentControl;
     }
 
@@ -133,19 +89,11 @@ public class PaymentModel implements Serializable {
         this.recurrence = recurrence;
     }
 
-    public UserModel getUser() {
-        return user;
+    public UUID getUserId() {
+        return userId;
     }
 
-    public void setUser(UserModel user) {
-        this.user = user;
-    }
-
-    public PaymentEventDto convertToPaymentEventDto(){
-        var paymentEventDto = new PaymentEventDto();
-        BeanUtils.copyProperties(this, paymentEventDto);
-        paymentEventDto.setPaymentControl(this.getPaymentControl().toString());
-        paymentEventDto.setUserId(this.getUser().getUserId());
-        return paymentEventDto;
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 }
