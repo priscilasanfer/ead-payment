@@ -9,7 +9,9 @@ import com.ead.payment.models.UserModel;
 import com.ead.payment.publishers.PaymentCommandPublisher;
 import com.ead.payment.repositories.CreditCardRepository;
 import com.ead.payment.repositories.PaymentRepository;
+import com.ead.payment.repositories.UserRepository;
 import com.ead.payment.services.PaymentService;
+import com.ead.payment.services.PaymentStripeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
@@ -39,13 +41,19 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     PaymentCommandPublisher paymentCommandPublisher;
 
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PaymentStripeService paymentStripeService;
+
     @Override
     @Transactional
     public PaymentModel requestPayment(PaymentRequestDto paymentRequestDto, UserModel userModel) {
         var creditCardModel = new CreditCardModel();
         var creditCardModelOptional = creditCardRepository.findByUser(userModel);
 
-        if(creditCardModelOptional.isPresent()){
+        if (creditCardModelOptional.isPresent()) {
             creditCardModel = creditCardModelOptional.get();
         }
 
@@ -57,7 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentModel.setPaymentControl(PaymentControl.REQUESTED);
         paymentModel.setPaymentRequestDate(LocalDateTime.now(ZoneId.of("UTC")));
         paymentModel.setPaymentExpirationDate(LocalDateTime.now(ZoneId.of("UTC")).plusDays(30));
-        paymentModel.setLastDigitsCreditCard(paymentRequestDto.getCreditCardNumber().substring(paymentRequestDto.getCreditCardNumber().length()-4));
+        paymentModel.setLastDigitsCreditCard(paymentRequestDto.getCreditCardNumber().substring(paymentRequestDto.getCreditCardNumber().length() - 4));
         paymentModel.setValuePaid(paymentRequestDto.getValuePaid());
         paymentModel.setUser(userModel);
         paymentRepository.save(paymentModel);
@@ -88,5 +96,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Optional<PaymentModel> findPaymentByUser(UUID userId, UUID paymentId) {
         return paymentRepository.findPaymentByUser(userId, paymentId);
+    }
+
+    @Override
+    @Transactional
+    public void makePayment(PaymentCommandDto paymentCommandDto) {
+        var paymentModel = paymentRepository.findById(paymentCommandDto.getPaymentId()).get();
+        var userModel = userRepository.findById(paymentCommandDto.getUserId()).get();
+        var creditCardModel = creditCardRepository.findById(paymentCommandDto.getCardId()).get();
+
+        paymentModel = paymentStripeService.processStripePayment(paymentModel, creditCardModel);
+
     }
 }

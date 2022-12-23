@@ -19,4 +19,6 @@ public interface PaymentService {
     Page<PaymentModel> findAllByUser(Specification<PaymentModel> spec, Pageable pageable);
 
     Optional<PaymentModel> findPaymentByUser(UUID userId, UUID paymentId);
+
+    void makePayment(PaymentCommandDto paymentCommandDto);
 }
