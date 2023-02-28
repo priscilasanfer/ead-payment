@@ -108,8 +108,7 @@ public class UserEventDto {
         this.actionType = actionType;
     }
 
-    public UserModel convertoToUserModel() {
-        var userModel = new UserModel();
+    public UserModel convertoToUserModel(UserModel userModel) {
         BeanUtils.copyProperties(this, userModel);
         return userModel;
     }
